@@ -1,0 +1,267 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flyfish-pgvector
+  namespace: flyfish-ai
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flyfish-pg-init
+  namespace: flyfish-ai
+data:
+  init.sql: |
+    CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE TABLE IF NOT EXISTS flyfish_artifact_index (
+      id TEXT PRIMARY KEY,
+      trip_id TEXT NOT NULL,
+      source_key TEXT NOT NULL,
+      heading TEXT NOT NULL,
+      content TEXT NOT NULL,
+      autorag_pattern TEXT,
+      indexed_at TIMESTAMPTZ DEFAULT NOW()
+    );
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flyfish-pgvector
+  namespace: flyfish-ai
+  labels:
+    app: flyfish-pgvector
+    app.kubernetes.io/part-of: flyfish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flyfish-pgvector
+  template:
+    metadata:
+      labels:
+        app: flyfish-pgvector
+        app.kubernetes.io/part-of: flyfish
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-pg
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-pg
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-pg
+                  key: POSTGRES_DB
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgres
+              containerPort: 5432
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            tcpSocket:
+              port: postgres
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: flyfish-pgvector
+        - name: init
+          configMap:
+            name: flyfish-pg-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flyfish-pgvector
+  namespace: flyfish-ai
+spec:
+  selector:
+    app: flyfish-pgvector
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seaweed-s3
+  namespace: flyfish-ai
+data:
+  s3.json: |
+    {
+      "identities": [
+        {
+          "name": "flyfish",
+          "credentials": [
+            {"accessKey": "flyfish-demo", "secretKey": "flyfish-demo-secret"}
+          ],
+          "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs
+  namespace: flyfish-ai
+  labels:
+    app: seaweedfs
+    app.kubernetes.io/part-of: flyfish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs
+  template:
+    metadata:
+      labels:
+        app: seaweedfs
+        app.kubernetes.io/part-of: flyfish
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: seaweedfs
+          image: docker.io/chrislusf/seaweedfs:3.80
+          command: ["weed"]
+          args:
+            - server
+            - -dir=/data
+            - -ip.bind=0.0.0.0
+            - -master.port=9333
+            - -volume.port=8081
+            - -filer=false
+            - -s3
+            - -s3.port=8333
+            - -s3.config=/etc/seaweed/s3.json
+          ports:
+            - name: s3
+              containerPort: 8333
+            - name: master
+              containerPort: 9333
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/seaweed
+          readinessProbe:
+            tcpSocket:
+              port: s3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: seaweed-s3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs
+  namespace: flyfish-ai
+spec:
+  selector:
+    app: seaweedfs
+  ports:
+    - name: s3
+      port: 8333
+      targetPort: s3
+    - name: master
+      port: 9333
+      targetPort: master
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flyfish-create-bucket
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: create-bucket
+          image: image-registry.openshift-image-registry.svc:5000/flyfish-ai/response-agent:0.1.0
+          command: ["python3", "-m", "flyfish_indexer.bucket"]
+          env:
+            - name: S3_ENDPOINT_URL
+              value: http://seaweedfs.flyfish-ai.svc.cluster.local:8333
+            - name: S3_BUCKET
+              value: flyfish-artifacts
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-s3
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-s3
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true

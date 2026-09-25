@@ -1,0 +1,17 @@
+FROM registry.access.redhat.com/ubi9/nodejs-22:latest AS build
+
+USER 0
+WORKDIR /opt/app
+COPY components/ui/package.json components/ui/package-lock.json ./
+RUN npm ci
+COPY components/ui/ ./
+RUN npm run build
+
+FROM registry.access.redhat.com/ubi9/httpd-24:latest
+
+COPY --from=build /opt/app/dist/ /var/www/html/
+COPY components/ui/httpd/proxy.conf /etc/httpd/conf.d/flyfish.conf
+
+EXPOSE 8080
+USER 1001
+CMD ["httpd", "-D", "FOREGROUND"]

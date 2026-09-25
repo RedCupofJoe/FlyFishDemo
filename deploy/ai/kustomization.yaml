@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: flyfish-ai
+resources:
+  - namespace.yaml
+  - platform.yaml
+  - storage.yaml
+  - indexer.yaml
+  - networkpolicy.yaml
+  - observability.yaml
+  - mcp-weather-mcp.yaml
+  - mcp-travel-advisory-mcp.yaml
+  - mcp-crime-stats-mcp.yaml
+  - mcp-landmarks-mcp.yaml
+  - mcp-attractions-mcp.yaml
+  - mcp-nightlife-mcp.yaml
+  - mcp-trends-mcp.yaml
+  - mcp-emergency-mcp.yaml
+  - mcp-embassy-mcp.yaml
+  - agent-planner-agent.yaml
+  - agent-weather-agent.yaml
+  - agent-risk-agent.yaml
+  - agent-places-agent.yaml
+  - agent-consular-agent.yaml
+  - agent-guide-agent.yaml
+  - agent-response-agent.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+  - name: flyfish-s3
+    literals:
+      - AWS_ACCESS_KEY_ID=flyfish-demo
+      - AWS_SECRET_ACCESS_KEY=flyfish-demo-secret
+  - name: flyfish-pg
+    literals:
+      - POSTGRES_USER=flyfish
+      - POSTGRES_PASSWORD=flyfish-demo
+      - POSTGRES_DB=flyfish

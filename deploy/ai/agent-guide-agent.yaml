@@ -1,0 +1,242 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: guide-agent
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: guide-agent
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/RedCupofJoe/FlyFishDemo.git
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: components/agents/Containerfile
+      buildArgs:
+        - name: FLYFISH_AGENT
+          value: guide
+  output:
+    to:
+      kind: ImageStreamTag
+      name: guide-agent:0.1.0
+  triggers: []
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: guide-agent
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guide-agent
+  namespace: flyfish-ai
+  labels:
+    app: guide-agent
+    app.kubernetes.io/part-of: flyfish
+    protocol.kagenti.io/a2a: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guide-agent
+  template:
+    metadata:
+      labels:
+        app: guide-agent
+        app.kubernetes.io/part-of: flyfish
+        protocol.kagenti.io/a2a: "true"
+      annotations:
+        kagenti.io/skills: "[\"compose-guide\"]"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: guide-agent
+      containers:
+        - name: agent
+          image: image-registry.openshift-image-registry.svc:5000/flyfish-ai/guide-agent:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+          env:
+            - name: FLYFISH_AGENT
+              value: "guide"
+            - name: PORT
+              value: "8080"
+            - name: MAAS_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: maasBaseUrl
+                  optional: true
+            - name: MAAS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-maas
+                  key: apiKey
+                  optional: true
+            - name: MAAS_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: maasModel
+            - name: MEMORYHUB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: memoryHubUrl
+            - name: MEMORYHUB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-memoryhub
+                  key: apiKey
+                  optional: true
+            - name: S3_ENDPOINT_URL
+              value: "http://seaweedfs.flyfish-ai.svc.cluster.local:8333"
+            - name: S3_BUCKET
+              value: flyfish-artifacts
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-s3
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-s3
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+            - name: OGX_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: ogxBaseUrl
+                  optional: true
+            - name: OGX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flyfish-ogx
+                  key: apiKey
+                  optional: true
+            - name: OGX_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: ogxModel
+            - name: OGX_VECTOR_STORE_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: ogxVectorStoreId
+                  optional: true
+            - name: AUTORAG_PATTERN_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: autoragPatternId
+                  optional: true
+            - name: OTEL_SERVICE_NAME
+              value: guide-agent
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: otelExporterOtlpEndpoint
+                  optional: true
+            - name: MLFLOW_TRACKING_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: mlflowTrackingUri
+                  optional: true
+            - name: MLFLOW_EXPERIMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: mlflowExperiment
+                  optional: true
+            - name: MLFLOW_WORKSPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: flyfish-platform
+                  key: mlflowWorkspace
+                  optional: true
+            - name: MLFLOW_CA_FILE
+              value: /etc/ssl/service-ca/service-ca.crt
+          volumeMounts:
+            - name: service-ca
+              mountPath: /etc/ssl/service-ca
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+      volumes:
+        - name: service-ca
+          configMap:
+            name: openshift-service-ca.crt
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guide-agent
+  namespace: flyfish-ai
+  labels:
+    app: guide-agent
+    app.kubernetes.io/part-of: flyfish
+spec:
+  selector:
+    app: guide-agent
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: agent.kagenti.dev/v1alpha1
+kind: AgentRuntime
+metadata:
+  name: guide-agent
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+spec:
+  type: agent
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: guide-agent

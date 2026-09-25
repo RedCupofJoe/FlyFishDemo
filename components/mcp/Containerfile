@@ -1,0 +1,14 @@
+FROM registry.access.redhat.com/ubi9/python-312:latest
+
+WORKDIR /opt/app
+COPY components/flyfish-common/src/flyfish_common /opt/app/flyfish_common
+COPY components/mcp/src/flyfish_mcp /opt/app/flyfish_mcp
+
+ARG FLYFISH_TOOL=weather
+ENV FLYFISH_TOOL=${FLYFISH_TOOL} \
+    PYTHONPATH=/opt/app \
+    PORT=8080
+
+EXPOSE 8080
+USER 1001
+CMD ["python3", "-m", "flyfish_mcp"]

@@ -1,0 +1,126 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: flyfish-ui
+  namespace: flyfish-ui
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: flyfish-ui
+  namespace: flyfish-ui
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/RedCupofJoe/FlyFishDemo.git
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: components/ui/Containerfile
+  output:
+    to:
+      kind: ImageStreamTag
+      name: flyfish-ui:0.1.0
+  triggers: []
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flyfish-ui
+  namespace: flyfish-ui
+  labels:
+    app: flyfish-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flyfish-ui
+  template:
+    metadata:
+      labels:
+        app: flyfish-ui
+        app.kubernetes.io/part-of: flyfish
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: httpd
+          image: image-registry.openshift-image-registry.svc:5000/flyfish-ui/flyfish-ui:0.1.0
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flyfish-ui
+  namespace: flyfish-ui
+spec:
+  selector:
+    app: flyfish-ui
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: flyfish
+  namespace: flyfish-ui
+spec:
+  to:
+    kind: Service
+    name: flyfish-ui
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ui-egress-to-response-agent
+  namespace: flyfish-ui
+spec:
+  podSelector:
+    matchLabels:
+      app: flyfish-ui
+  policyTypes: [Egress]
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flyfish-ai
+          podSelector:
+            matchLabels:
+              app: response-agent
+      ports:
+        - protocol: TCP
+          port: 8080

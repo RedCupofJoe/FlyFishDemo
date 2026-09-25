@@ -1,0 +1,17 @@
+[
+  {
+    "question": "What is the FlyFish seed document for?",
+    "correct_answers": [
+      "AutoRAG optimization of FlyFish travel guides",
+      "The FlyFish seed document is for AutoRAG optimization of FlyFish travel guides."
+    ],
+    "correct_answer_document_ids": ["seed-guide.md"]
+  },
+  {
+    "question": "Where does a follow-up question get its answer?",
+    "correct_answers": [
+      "A follow-up question is answered from the generated report, not from a new web search."
+    ],
+    "correct_answer_document_ids": ["seed-guide.md"]
+  }
+]

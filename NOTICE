@@ -1,0 +1,9 @@
+FlyFish
+Copyright 2026 FlyFish contributors
+
+This product includes country boundaries derived from Natural Earth
+(public domain), simplified for the clickable map:
+https://github.com/nvkelso/natural-earth-vector
+
+Map generation: scripts/build_world_map.py
+Source file: geojson/ne_50m_admin_0_countries.geojson

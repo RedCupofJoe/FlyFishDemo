@@ -1,0 +1,19 @@
+project: flyfish
+memory_loading:
+  pattern: search
+retrieval_defaults:
+  max_results: 8
+  focus: FlyFish travel
+kinds:
+  personal:
+    scope: user
+    weight: 0.9
+    description: Traveler origin country and citizenship status.
+  episodic:
+    scope: project
+    weight: 0.8
+    description: What this trip's agents did, in route order.
+  semantic:
+    scope: project
+    weight: 0.7
+    description: Country facts that can be reused on a later trip.

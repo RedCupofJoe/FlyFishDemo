@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: flyfish-index
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+spec:
+  suspend: true
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: index
+              image: image-registry.openshift-image-registry.svc:5000/flyfish-ai/response-agent:0.1.0
+              command: ["python3", "-m", "flyfish_indexer"]
+              env:
+                - name: TRIP_ID
+                  value: replace-with-trip-id
+                - name: S3_ENDPOINT_URL
+                  value: "http://seaweedfs.flyfish-ai.svc.cluster.local:8333"
+                - name: S3_BUCKET
+                  value: flyfish-artifacts
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: flyfish-s3
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: flyfish-s3
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: AUTORAG_PATTERN_ID
+                  valueFrom:
+                    configMapKeyRef:
+                      name: flyfish-platform
+                      key: autoragPatternId
+                      optional: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                runAsNonRoot: true

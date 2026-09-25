@@ -1,0 +1,20 @@
+FROM registry.access.redhat.com/ubi9/python-312:latest
+
+WORKDIR /opt/app
+COPY requirements-agents.txt /tmp/requirements-agents.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-agents.txt
+
+COPY components/flyfish-common/src/flyfish_common /opt/app/flyfish_common
+COPY components/mcp/src/flyfish_mcp /opt/app/flyfish_mcp
+COPY components/agents/src/flyfish_agents /opt/app/flyfish_agents
+COPY components/indexer/src/flyfish_indexer /opt/app/flyfish_indexer
+
+ARG FLYFISH_AGENT=response
+ENV FLYFISH_AGENT=${FLYFISH_AGENT} \
+    PYTHONPATH=/opt/app \
+    PORT=8080 \
+    ARTIFACT_DIR=/data/artifacts
+
+EXPOSE 8080
+USER 1001
+CMD ["python3", "-m", "flyfish_agents"]

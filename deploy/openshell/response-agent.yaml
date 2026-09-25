@@ -1,0 +1,85 @@
+# OpenShell sandbox policy for response-agent.
+# Replace maas-gateway.example.svc and ogx.example.svc with the cluster Service hostnames.
+# Endpoints without a protocol allow the TCP stream, which matches in-cluster HTTP.
+version: 1
+filesystem_policy:
+  include_workdir: true
+  read_only:
+    - /usr
+    - /lib
+    - /proc
+    - /dev/urandom
+    - /opt
+    - /etc
+    - /var/log
+  read_write:
+    - /sandbox
+    - /tmp
+    - /data
+    - /dev/null
+landlock:
+  compatibility: best_effort
+network_policies:
+  memory_hub_mcp:
+    name: memory_hub_mcp
+    endpoints:
+      - host: memory-hub-mcp.memory-hub-mcp.svc
+        port: 8080
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12
+  seaweedfs:
+    name: seaweedfs
+    endpoints:
+      - host: seaweedfs.flyfish-ai.svc
+        port: 8333
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12
+  maas_gateway:
+    name: maas_gateway
+    endpoints:
+      - host: maas-gateway.example.svc
+        port: 443
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12
+  data_science_collector:
+    name: data_science_collector
+    endpoints:
+      - host: data-science-collector.redhat-ods-monitoring.svc
+        port: 4318
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12
+  mlflow:
+    name: mlflow
+    endpoints:
+      - host: mlflow.redhat-ods-applications.svc
+        port: 8443
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12
+  planner_agent:
+    name: planner_agent
+    endpoints:
+      - host: planner-agent.flyfish-ai.svc
+        port: 8080
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12
+  ogx:
+    name: ogx
+    endpoints:
+      - host: ogx.example.svc
+        port: 443
+    binaries:
+      - path: /opt/app-root/bin/python3
+      - path: /usr/bin/python3
+      - path: /usr/bin/python3.12

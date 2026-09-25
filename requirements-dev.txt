@@ -1,0 +1,4 @@
+pytest==9.1.1
+opentelemetry-api==1.32.1
+opentelemetry-sdk==1.32.1
+opentelemetry-exporter-otlp-proto-http==1.32.1

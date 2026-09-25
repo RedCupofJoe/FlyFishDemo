@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flyfish-ai
+  labels:
+    kubernetes.io/metadata.name: flyfish-ai
+    app.kubernetes.io/part-of: flyfish

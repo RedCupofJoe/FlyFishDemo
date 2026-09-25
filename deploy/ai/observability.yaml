@@ -1,0 +1,111 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: planner-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: planner-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: weather-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: weather-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: risk-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: risk-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: places-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: places-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: consular-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: consular-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: guide-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: guide-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: response-agent-mlflow
+  namespace: flyfish-ai
+  labels:
+    app.kubernetes.io/part-of: flyfish
+subjects:
+  - kind: ServiceAccount
+    name: response-agent
+    namespace: flyfish-ai
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mlflow-integration

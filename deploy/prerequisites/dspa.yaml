@@ -1,0 +1,26 @@
+# Apply only after `oc get crd datasciencepipelinesapplications.opendatahub.io` succeeds.
+# Point the secret keys at the same demo S3 identity used by seaweedfs, or at the
+# Data Foundation secret if that bucket is the one in use.
+apiVersion: datasciencepipelinesapplications.opendatahub.io/v1alpha1
+kind: DataSciencePipelinesApplication
+metadata:
+  name: flyfish-pipelines
+  namespace: flyfish-ai
+spec:
+  apiServer:
+    deploy: true
+    enableOauth: true
+    managedPipelines: {}
+  database:
+    mariaDB:
+      deploy: true
+      pipelineDBName: flyfish
+  objectStorage:
+    externalStorage:
+      bucket: flyfish-artifacts
+      host: seaweedfs.flyfish-ai.svc.cluster.local:8333
+      scheme: http
+      s3CredentialsSecret:
+        accessKey: AWS_ACCESS_KEY_ID
+        secretKey: AWS_SECRET_ACCESS_KEY
+        secretName: flyfish-s3

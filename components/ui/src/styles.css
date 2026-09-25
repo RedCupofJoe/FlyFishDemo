@@ -1,0 +1,70 @@
+.flyfish-map {
+  background: #d6e6f2;
+  border: 1px solid #d2d2d2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.flyfish-map svg {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.flyfish-map .ocean {
+  fill: #d6e6f2;
+}
+
+.flyfish-map .country {
+  cursor: pointer;
+}
+
+.flyfish-map .country path,
+.flyfish-map .country circle {
+  fill: #8a8d90;
+  stroke: #ffffff;
+  stroke-width: 0.4;
+}
+
+.flyfish-map .country:hover path,
+.flyfish-map .country:hover circle {
+  fill: #4cb140;
+}
+
+.flyfish-map .country.selected path,
+.flyfish-map .country.selected circle {
+  fill: #0066cc;
+}
+
+.flyfish-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 70vh;
+}
+
+.flyfish-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: auto;
+}
+
+.flyfish-message {
+  border: 1px solid #d2d2d2;
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.flyfish-message h1,
+.flyfish-message h2,
+.flyfish-message h3 {
+  margin: 0.4rem 0;
+}
+
+.flyfish-route {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
