@@ -18,7 +18,7 @@ The Python services use the standard library for HTTP and MCP. The UI dependency
 
 Not added by FlyFish:
 
-- MinIO. Memory Hub's upstream installer may deploy it. MinIO's server license is AGPL. That install was chosen so Memory Hub stays on its upstream namespaces. FlyFish artifact storage is SeaweedFS (Apache-2.0) or an OpenShift Data Foundation bucket.
+- MinIO. This lab does not deploy it. Memory Hub oversized content uses SeaweedFS (Apache-2.0). The upstream Memory Hub installer can still deploy MinIO, whose server license is AGPL.
 - Leaflet and other BSD map libraries. The map is a generated SVG.
 
 Platform components (UBI images, MaaS, OGX, TrustyAI, OpenShift) are Red Hat entitlements and are not vendored here.

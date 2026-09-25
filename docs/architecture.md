@@ -34,7 +34,7 @@ Each agent emits OpenTelemetry spans for the HTTP request, each specialist skill
 Two exporters run when their endpoints are set in ConfigMap `flyfish-platform`:
 
 - `otelExporterOtlpEndpoint` sends OTLP/HTTP to the OpenShift AI collector (`data-science-collector.redhat-ods-monitoring.svc.cluster.local:4318`), which stores traces in Tempo.
-- `mlflowTrackingUri` sends the same spans to the cluster MLflow server's `/v1/traces` ingest. The experiment is `flyfish-agents` in workspace `flyfish-ai`. Each agent ServiceAccount is bound to the `mlflow-integration` ClusterRole and authenticates with its projected token.
+- `mlflowTrackingUri` sends the same spans to the cluster MLflow server's `/v1/traces` ingest. The experiment is `flyfish-agents` in workspace `flyfish-ai`. Each agent ServiceAccount is bound to the `mlflow-operator-mlflow-integration` ClusterRole and authenticates with its projected token.
 
 Health checks are not traced. If either backend is down, the agent logs the failure and keeps serving.
 
@@ -54,7 +54,7 @@ Specialists write Markdown under `trips/{tripId}/`. The guide is `trips/{tripId}
 
 One AutoRAG optimization run, using `deploy/ai/autorag/eval.json` and `seed-guide.md`, chooses the RAG pattern. Later trips are indexed with that pattern into pgvector through OGX. The response agent calls the OGX Responses API `file_search` tool when `OGX_BASE_URL` and `OGX_VECTOR_STORE_ID` are set. Otherwise it quotes the stored guide and says when the guide does not contain the answer.
 
-Object storage defaults to SeaweedFS in `flyfish-ai`. An ObjectBucketClaim for OpenShift Data Foundation is in `deploy/ai/odf/`. FlyFish does not deploy MinIO. Memory Hub's upstream installer may deploy its own MinIO; that exception is recorded in `.agent/DECISIONS.md`.
+Object storage is SeaweedFS in `flyfish-ai`. An ObjectBucketClaim for OpenShift Data Foundation is in `deploy/ai/odf/`. FlyFish guides use bucket `flyfish-artifacts`. Memory Hub oversized content uses bucket `memoryhub` on the same Service. This lab does not deploy MinIO.
 
 ## Report rules
 

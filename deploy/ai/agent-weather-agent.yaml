@@ -60,6 +60,7 @@ spec:
         app: weather-agent
         app.kubernetes.io/part-of: flyfish
         protocol.kagenti.io/a2a: "true"
+        kagenti.io/inject: disabled
       annotations:
         kagenti.io/skills: "[\"seasonal-weather\"]"
     spec:

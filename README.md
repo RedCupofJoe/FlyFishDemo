@@ -6,11 +6,15 @@ The guide covers seasonal weather, travel advisories, crime statistics, landmark
 
 ## Deploy
 
+### Prerequisite
+
+Start from the cluster at `<CLUSTER_API>` (`oc login <CLUSTER_API>` and `oc whoami` succeed). That cluster already has OpenShift 4.21.33, OpenShift AI 3.5.1, a Ready DataScienceCluster, Managed pipelines, KServe, TrustyAI, MaaS, the MLflow operator, and OGX, plus the OpenTelemetry collector and Tempo. Three workers each have one NVIDIA L40S (48 GB). The default StorageClass is `gp3-csi`. It does not yet have the MCP Lifecycle Operator, the agents operator, a published MaaS model, Memory Hub, an MLflow server, OpenShell, or the FlyFish namespaces. The full starting inventory is in [deploy/prerequisites/README.md](deploy/prerequisites/README.md).
+
 Log in first. `oc whoami` must succeed. These commands apply only the FlyFish namespaces. They do not install OpenShift AI, Memory Hub, or operators.
 
 Cluster builds clone `https://github.com/RedCupofJoe/FlyFishDemo.git` at `main`. Push this repo to that branch before starting the builds, or the images will not contain this code.
 
-1. Confirm the platform pieces in [deploy/prerequisites/README.md](deploy/prerequisites/README.md): OpenShift 4.20+, OpenShift AI 3.5, the MCP Lifecycle Operator, the agents operator, MaaS for `RedHatAI/gpt-oss-20b` behind Granite Guardrails, and tracing plus MLflow if you want agent traces.
+1. Confirm the platform pieces in [deploy/prerequisites/README.md](deploy/prerequisites/README.md): OpenShift 4.20+, OpenShift AI 3.5, the MCP Lifecycle Operator, the agents operator, MaaS for `RedHatAI/gpt-oss-20b` behind Granite Guardrails, and tracing plus MLflow if you want agent traces. `scripts/install-lab.sh` enables MCP, tracing, the development MLflow server, the AgentRuntime CRDs, the pipeline server, and the two FlyFish namespaces. It exits 1 while the Kagenti controller chart, Memory Hub, or OpenShell is still missing. It does not create API-key Secrets.
 2. From this repository, create the two application namespaces and their workloads:
 
 ```bash

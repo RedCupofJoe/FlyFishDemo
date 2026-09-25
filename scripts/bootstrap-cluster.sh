@@ -11,7 +11,7 @@ fi
 oc apply -k deploy/ai
 oc apply -k deploy/ui
 
-if oc get crd datasciencepipelinesapplications.opendatahub.io >/dev/null 2>&1; then
+if oc get crd datasciencepipelinesapplications.datasciencepipelinesapplications.opendatahub.io >/dev/null 2>&1; then
   oc apply -f deploy/prerequisites/dspa.yaml
 else
   echo "DataSciencePipelinesApplication CRD is not installed. Skip the pipeline server until OpenShift AI pipelines are enabled."

@@ -156,6 +156,7 @@ spec:
         app: {name}
         app.kubernetes.io/part-of: flyfish
         protocol.kagenti.io/a2a: "true"
+        kagenti.io/inject: disabled
       annotations:
         kagenti.io/skills: {json.dumps(skills_json)}
     spec:
@@ -976,7 +977,7 @@ subjects:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: mlflow-integration
+  name: mlflow-operator-mlflow-integration
 """
         )
     return "---\n".join(bindings)

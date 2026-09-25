@@ -20,7 +20,7 @@ The project id is `flyfish`. The mapping is in `.memoryhub.yaml`.
 
 FlyFish does not deploy MinIO. The default bucket is SeaweedFS in `flyfish-ai` (`docker.io/chrislusf/seaweedfs:3.80`, S3 port 8333). The demo identity `flyfish-demo` / `flyfish-demo-secret` matches ConfigMap `seaweed-s3`. An OpenShift Data Foundation `ObjectBucketClaim` is available at `deploy/ai/odf/objectbucketclaim.yaml` and is not part of the default kustomize build.
 
-Upstream Memory Hub may still deploy its own MinIO. That AGPL server is an accepted exception because the upstream installer was chosen. It is not a FlyFish dependency.
+This lab does not deploy MinIO. Memory Hub stores oversized content in the same SeaweedFS Service, bucket `memoryhub`, using the `flyfish-demo` identity. The upstream Memory Hub installer can still deploy MinIO; that path is not used here.
 
 ## Reasoning and guardrails
 
@@ -30,7 +30,7 @@ The reasoning model is `RedHatAI/gpt-oss-20b` (modelcar `oci://registry.redhat.i
 
 ## Observability
 
-Agents export OpenTelemetry traces to the OpenShift AI collector (Tempo) and to MLflow OTLP ingest. The experiment name is `flyfish-agents` and the workspace is `flyfish-ai`. Agent ServiceAccounts are bound to ClusterRole `mlflow-integration`. Span attributes omit the traveler prompt and tool payloads.
+Agents export OpenTelemetry traces to the OpenShift AI collector (Tempo) and to MLflow OTLP ingest. The experiment name is `flyfish-agents` and the workspace is `flyfish-ai`. Agent ServiceAccounts are bound to ClusterRole `mlflow-operator-mlflow-integration`. Span attributes omit the traveler prompt and tool payloads.
 
 ## Licenses
 

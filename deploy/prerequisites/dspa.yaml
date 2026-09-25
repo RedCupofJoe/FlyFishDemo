@@ -1,7 +1,7 @@
-# Apply only after `oc get crd datasciencepipelinesapplications.opendatahub.io` succeeds.
+# Apply only after `oc get crd datasciencepipelinesapplications.datasciencepipelinesapplications.opendatahub.io` succeeds.
 # Point the secret keys at the same demo S3 identity used by seaweedfs, or at the
 # Data Foundation secret if that bucket is the one in use.
-apiVersion: datasciencepipelinesapplications.opendatahub.io/v1alpha1
+apiVersion: datasciencepipelinesapplications.opendatahub.io/v1
 kind: DataSciencePipelinesApplication
 metadata:
   name: flyfish-pipelines
